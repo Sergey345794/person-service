@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
+	 @JsonSubTypes.Type(value = PersonDto.class, name = "person"),
     @JsonSubTypes.Type(value = ChildDto.class, name = "child"),
     @JsonSubTypes.Type(value = EmployeeDto.class, name = "employee")
 })

@@ -42,21 +42,17 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 
 	@Override
 	public PersonDto findPersonById(Integer id) {
-		Person person = personRepository.findById(id).orElseThrow(PersonNotFoundException::new);
-		TypeMap<Person,  PersonDto> mapperMap = modelMapper.createTypeMap(Person.class, PersonDto.class);
-		mapperMap.include(Child.class, ChildDto.class)
-				.include(Employee.class, EmployeeDto.class);
-				//TODO
-//		return modelMapper.map(person, mapperMap);	
-		return null;
+		Person person = personRepository.findById(id).orElseThrow(PersonNotFoundException::new);		
+		return mapperToPersonDto(person);
 	}
+
 
 	@Override
 	@Transactional
 	public PersonDto removePerson(Integer id) {
 		Person person = personRepository.findById(id).orElseThrow(() -> new PersonNotFoundException());
 		personRepository.delete(person);
-		return modelMapper.map(person, PersonDto.class);
+		return mapperToPersonDto(person);
 	}
 
 	@Override
@@ -64,7 +60,7 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 	public PersonDto updatePersonName(Integer id, String name) {
 		Person person = personRepository.findById(id).orElseThrow(() -> new PersonNotFoundException());
 		person.setName(name);
-		return modelMapper.map(person, PersonDto.class);
+		return mapperToPersonDto(person);
 	}
 
 	@Override
@@ -72,14 +68,14 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 	public PersonDto updatePersonAddress(Integer id, AddressDto addressDto) {
 		Person person = personRepository.findById(id).orElseThrow(() -> new PersonNotFoundException());
 		person.setAddress(modelMapper.map(addressDto, Address.class));
-		return modelMapper.map(person, PersonDto.class);
+		return mapperToPersonDto(person);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Iterable<PersonDto> findPersonsByCity(String city) {
 		return personRepository.findByAddressCity(city)
-				.map(p -> modelMapper.map(p, PersonDto.class))
+				.map(p -> mapperToPersonDto(p))
 				.collect(Collectors.toList());
 	}
 
@@ -87,7 +83,7 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 	@Transactional(readOnly = true)
 	public Iterable<PersonDto> findPersonsByName(String name) {
 		return personRepository.findByName(name)
-				.map(p -> modelMapper.map(p, PersonDto.class))
+				.map(p -> mapperToPersonDto(p))
 				.collect(Collectors.toList());
 	}
 
@@ -97,7 +93,7 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 		LocalDate from = LocalDate.now().minusYears(minAge);
 		LocalDate to = LocalDate.now().minusYears(maxAge);
 		return personRepository.findByBirthDateBetween(from, to)
-				.map(p -> modelMapper.map(p, PersonDto.class))
+				.map(p -> mapperToPersonDto(p))
 				.collect(Collectors.toList());
 	}
 
@@ -120,5 +116,13 @@ public class PersonServiceImpl implements PersonService, CommandLineRunner {
 			personRepository.save(employee);
 		}
 	}
-
+	
+	private PersonDto mapperToPersonDto(Person person) {
+		if (person instanceof Child) {
+			return modelMapper.map(person, ChildDto.class);
+		} else if (person instanceof Employee) {
+			return modelMapper.map(person, EmployeeDto.class);
+		} 		
+		return modelMapper.map(person, PersonDto.class);
+	}
 }
